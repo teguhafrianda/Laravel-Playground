@@ -71,6 +71,7 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
         return response()->json([
             'message' => 'Project tidak terindikasi korupsi dan hanya bayar pajak',
             'status' => 'success',
+            'project_amount' => $HandlerFormatRupiah($project_value),
             'tax_amount' => $HandlerFormatRupiah($tax_amount),
             'balance' => $HandlerFormatRupiah($HandlerPayTax($tax_amount, $project_value))
         ], 200);
@@ -84,10 +85,11 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
         return response()->json([
             'message' => 'Project terindikasi korupsi dan bayar pajak dan bayar korupsi',
             'status' => 'success',
+            'project_amount' => $HandlerFormatRupiah($project_value),
             'tax_amount' => $HandlerFormatRupiah($tax_amount),
             'corruption_percentage' => $HandlerCorruptionPercentage($corruption, $pay_tax),
             'corruption_nominal' => $HandlerFormatRupiah($corruption),
-            'balance' => $HandlerFormatRupiah($HandlerBalanceAfterCorruption($project_value, $corruption))
+            'balance' => $HandlerFormatRupiah($HandlerBalanceAfterCorruption($pay_tax, $corruption))
         ], 200);
     }
 });
