@@ -53,7 +53,7 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
         ], 422);
     }
 
-    //validate input hanya berupa integer
+    //validate tipe input hanya berupa integer
     if (!is_int($tax) || !is_int($project_value) || !is_int($corruption)) {
         return response()->json([
             'message' => 'Input harus berupa integer',
