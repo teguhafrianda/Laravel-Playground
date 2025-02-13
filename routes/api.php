@@ -69,7 +69,7 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
         $tax_value = $HandlerTaxInput($tax);
         $tax_amount = $HandlerDecitionPayTax($project_value, $tax_value);
         return response()->json([
-            'message' => 'Project tidak indikasi korupsi dan hanya bayar pajak',
+            'message' => 'Project tidak terindikasi korupsi dan hanya bayar pajak',
             'status' => 'success',
             'tax_amount' => $HandlerFormatRupiah($tax_amount),
             'balance' => $HandlerFormatRupiah($HandlerPayTax($tax_amount, $project_value))
@@ -82,7 +82,7 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
         $tax_amount = $HandlerDecitionPayTax($project_value, $tax_value);
         $pay_tax = $HandlerPayTax($tax_amount, $project_value);
         return response()->json([
-            'message' => 'Project indikasi korupsi dan bayar pajak dan korupsi',
+            'message' => 'Project terindikasi korupsi dan bayar pajak dan bayar korupsi',
             'status' => 'success',
             'tax_amount' => $HandlerFormatRupiah($tax_amount),
             'corruption_percentage' => $HandlerCorruptionPercentage($corruption, $pay_tax),
