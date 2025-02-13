@@ -31,7 +31,12 @@ $HandlerCorruptionPercentage = fn($corruption_amount, $project_value): float => 
 //handler set sisa saldo setelah korupsi
 $HandlerBalanceAfterCorruption = fn($project_value, $corruption_amount): int => $project_value - $corruption_amount;
 
+//handler format rupiah
 $HandlerFormatRupiah = fn($value): string => "Rp " . number_format($value, 0, ',', '.');
+
+//handler format percentage
+$HandlerFormatPercentage = fn($value): string => number_format($value, 2, '.', '') . '%';
+
 
 Route::post('/count/corruption/coretax', function (Request $request) use (
     $HandlerTaxInput,
@@ -40,7 +45,8 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
     $HandlerDecitionPayTax,
     $HandlerCorruptionPercentage,
     $HandlerBalanceAfterCorruption,
-    $HandlerFormatRupiah
+    $HandlerFormatRupiah,
+    $HandlerFormatPercentage
 ) {
     //req: body parser
     $tax = $request->post('tax');
@@ -87,7 +93,7 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
             'status' => 'success',
             'project_amount' => $HandlerFormatRupiah($project_value),
             'tax_amount' => $HandlerFormatRupiah($tax_amount),
-            'corruption_percentage' => $HandlerCorruptionPercentage($corruption, $pay_tax),
+            'corruption_percentage' => $HandlerFormatPercentage($HandlerCorruptionPercentage($corruption, $pay_tax)),
             'corruption_nominal' => $HandlerFormatRupiah($corruption),
             'balance' => $HandlerFormatRupiah($HandlerBalanceAfterCorruption($pay_tax, $corruption))
         ], 200);
