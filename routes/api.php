@@ -7,33 +7,84 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/try/{a}/{b}/{c}', function ($a, $b, $c) {
-    /**
-     * 
-     * query params pake get (format: http://127.0.0.1:8000/api/try?a=1&b=2)
-     * body params pake post (format: json,form data dst)
-     * route params(path) all request methods (formatnya: http://127.0.0.1:8000/api/try/1/1)
-     * 
-     * request param: query,body,route(path)
-     * 
-     * {a}/{b} <- model binding untuk menyiapkan params input yang nanti nya akan di proses secara function
-     */
+//functional programming
 
-    // $a = $request->query('a'); //req query artinya adalah requestnya hanya bisa melalui query params
-    // $b = $request->query('b');
+//set struct data handler
+//const project nominal
+const project_nominal = 30000000;
 
-    // $a = $request->post('a'); //req body artinya adalah requestnya hanya bisa melalui body params
-    // $b = $request->post('b');
+//tax input
+$HandlerTaxInput = fn($value): float => $value / 100;
 
-    $c = $a + $b * $c;
-    if (empty($a) || empty($b)) {
-        return response()->json(['message' => 'input masih kosong']);
+//handler set project value if indicate corruption or not
+$HandlerValidateNominalProject = fn($value): bool => $value >= project_nominal ? true : false;
+
+//handler set pay tax
+$HandlerPayTax = fn($tax_amount, $project_value): int => $project_value - $tax_amount;
+
+//handler set decicion how to pay tax
+$HandlerDecitionPayTax = fn($project_value, $tax_value): int => $project_value * $tax_value;
+
+//handler set corruption amount
+$HandlerCorruptionPercentage = fn($corruption_amount, $project_value): float => ($corruption_amount / $project_value) * 100;
+
+//handler set balance after corruption
+$HandlerBalanceAfterCorruption = fn($project_value, $corruption_amount): int => $project_value - $corruption_amount;
+
+Route::post('/count/corruption/coretax', function (Request $request) use (
+    $HandlerTaxInput,
+    $HandlerValidateNominalProject,
+    $HandlerPayTax,
+    $HandlerDecitionPayTax,
+    $HandlerCorruptionPercentage,
+    $HandlerBalanceAfterCorruption
+) {
+    //req: body parser
+    $tax = $request->post('tax');
+    $project_value = $request->post('project_value');
+    $corruption = $request->post('corruption');
+
+    //validate input is not empty make sure insert all input
+    if (empty($tax) || empty($project_value) || empty($corruption)) {
+        return response()->json([
+            'message' => 'Input not empty',
+            'hint' => 'Please insert all input: tax, project_value, corruption',
+            'status' => 'error'
+        ], 422);
     }
 
-    if ($c < 3) {
-        $h = 'lebih kecil dari 3';
-    } else {
-        $h = 'lebih besar 3';
+    //validate input only integer
+    if (!is_int($tax) || !is_int($project_value) || !is_int($corruption)) {
+        return response()->json([
+            'message' => 'Input harus berupa angka',
+            'status' => 'error'
+        ], 422);
     }
-    return response()->json(['message' => $h]);
+
+    //nominal project less than project nominal
+    if (!$HandlerValidateNominalProject($project_value)) {
+        $tax_value = $HandlerTaxInput($tax);
+        $tax_amount = $HandlerDecitionPayTax($project_value, $tax_value);
+        return response()->json([
+            'message' => 'Project not indicate corruption and only pay tax',
+            'status' => 'success',
+            'tax_amount' => $tax_amount,
+            'balance' => $HandlerPayTax($tax_amount, $project_value)
+        ], 200);
+    }
+
+    //nominal project greater than project nominal (indicate corruption)
+    if ($HandlerValidateNominalProject($project_value)) {
+        $tax_value = $HandlerTaxInput($tax);
+        $tax_amount = $HandlerDecitionPayTax($project_value, $tax_value);
+        $pay_tax = $HandlerPayTax($tax_amount, $project_value);
+        return response()->json([
+            'message' => 'Project indicate corruption and pay tax and corruption',
+            'status' => 'success',
+            'tax_amount' => $tax_amount,
+            'corruption_percentage' => $HandlerCorruptionPercentage($corruption, $pay_tax),
+            'corruption_nominal' => $corruption,
+            'balance' => $HandlerBalanceAfterCorruption($project_value, $corruption)
+        ], 200);
+    }
 });
