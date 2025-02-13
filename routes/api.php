@@ -20,22 +20,22 @@ $HandlerTaxInput = fn($value): float => $value / 100;
 $HandlerValidateNominalProject = fn($value): bool => $value >= project_nominal ? true : false;
 
 //handler set bayar pajak
-$HandlerPayTax = fn($tax_amount, $project_value): int => $project_value - $tax_amount;
+$HandlerPayTax = fn(int $tax_amount, int $project_value): int => $project_value - $tax_amount;
 
 //handler set menentukan pajak yang harus dibayar
-$HandlerDecitionPayTax = fn($project_value, $tax_value): int => $project_value * $tax_value;
+$HandlerDecitionPayTax = fn(int $project_value, float $tax_value): int => $project_value * $tax_value;
 
 //handler set persentase korupsi
-$HandlerCorruptionPercentage = fn($corruption_amount, $project_value): float => ($corruption_amount / $project_value) * 100;
+$HandlerCorruptionPercentage = fn(int $corruption_amount, int $project_value): float => ($corruption_amount / $project_value) * 100;
 
 //handler set sisa saldo setelah korupsi
-$HandlerBalanceAfterCorruption = fn($project_value, $corruption_amount): int => $project_value - $corruption_amount;
+$HandlerBalanceAfterCorruption = fn(int $project_value, int $corruption_amount): int => $project_value - $corruption_amount;
 
 //handler format rupiah
-$HandlerFormatRupiah = fn($value): string => "Rp " . number_format($value, 0, ',', '.');
+$HandlerFormatRupiah = fn(int $value): string => "Rp " . number_format($value, 0, ',', '.');
 
 //handler format percentage
-$HandlerFormatPercentage = fn($value): string => number_format($value, 2, '.', '') . '%';
+$HandlerFormatPercentage = fn(float $value): string => number_format($value, 2, '.', '') . '%';
 
 
 Route::post('/count/corruption/coretax', function (Request $request) use (
