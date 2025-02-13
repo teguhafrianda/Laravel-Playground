@@ -31,13 +31,16 @@ $HandlerCorruptionPercentage = fn($corruption_amount, $project_value): float => 
 //handler set sisa saldo setelah korupsi
 $HandlerBalanceAfterCorruption = fn($project_value, $corruption_amount): int => $project_value - $corruption_amount;
 
+$HandlerFormatRupiah = fn($value): string => "Rp " . number_format($value, 0, ',', '.');
+
 Route::post('/count/corruption/coretax', function (Request $request) use (
     $HandlerTaxInput,
     $HandlerValidateNominalProject,
     $HandlerPayTax,
     $HandlerDecitionPayTax,
     $HandlerCorruptionPercentage,
-    $HandlerBalanceAfterCorruption
+    $HandlerBalanceAfterCorruption,
+    $HandlerFormatRupiah
 ) {
     //req: body parser
     $tax = $request->post('tax');
@@ -68,8 +71,8 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
         return response()->json([
             'message' => 'Project tidak indikasi korupsi dan hanya bayar pajak',
             'status' => 'success',
-            'tax_amount' => $tax_amount,
-            'balance' => $HandlerPayTax($tax_amount, $project_value)
+            'tax_amount' => $HandlerFormatRupiah($tax_amount),
+            'balance' => $HandlerFormatRupiah($HandlerPayTax($tax_amount, $project_value))
         ], 200);
     }
 
@@ -81,10 +84,10 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
         return response()->json([
             'message' => 'Project indikasi korupsi dan bayar pajak dan korupsi',
             'status' => 'success',
-            'tax_amount' => $tax_amount,
+            'tax_amount' => $HandlerFormatRupiah($tax_amount),
             'corruption_percentage' => $HandlerCorruptionPercentage($corruption, $pay_tax),
-            'corruption_nominal' => $corruption,
-            'balance' => $HandlerBalanceAfterCorruption($project_value, $corruption)
+            'corruption_nominal' => $HandlerFormatRupiah($corruption),
+            'balance' => $HandlerFormatRupiah($HandlerBalanceAfterCorruption($project_value, $corruption))
         ], 200);
     }
 });
