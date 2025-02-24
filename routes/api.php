@@ -49,20 +49,51 @@ Route::post('/hitung/korupsi', function (Request $request) {
         return response()->json([
             "Pesan" => "Project terindikasi korupsi dan bayar pajak serta bayar korupsi",
             "status" => "success",
-            "project_amount" => "Rp " . number_format($nilai_proyek),
-            "tax_amount" => "Rp " . number_format($data_pajak['ppn']),
-            "corruption_percentage" => number_format($persentase_korupsi, 2) . "%",
-            "corruption_nominal" => "Rp " . number_format($nilai_korupsi),
-            "balance" => "Rp " . number_format($nilai_proyek_akhir)
+            "project_nominal" => "Rp " . number_format($nilai_proyek),
+            "pajak" => "Rp " . number_format($data_pajak['ppn']),
+            "korupsi" => number_format($persentase_korupsi, 2) . "%",
+            "korupsi_nominal" => "Rp " . number_format($nilai_korupsi),
+            "proyek_sebenarnya" => "Rp " . number_format($nilai_proyek_akhir)
         ]);
     } else {
         return response()->json([
             "Pesan" => "Project tidak terindikasi korupsi, hanya membayar pajak",
             "status" => "success",
-            "project_amount" => "Rp " . number_format($nilai_proyek,),
-            "tax_amount" => "Rp " . number_format($data_pajak['ppn']),
-            "balance" => "Rp " . number_format($nilai_setelah_pajak)
+            "project_nominal" => "Rp " . number_format($nilai_proyek,),
+            "pajak" => "Rp " . number_format($data_pajak['ppn']),
+            "proyek_sebenarnya" => "Rp " . number_format($nilai_setelah_pajak)
         ]);
     }
+});
+
+Route::post('/evaluasi/tim', function (Request $request) {
+    $team = $request->input('team');
+    
+    if (!is_array($team) || count($team) === 0) {
+        return response()->json(["error" => "Data tim tidak valid."]);
+    }
+    
+    $total_dev = count($team);
+    $failed_dev = array_filter($team, fn($dev) => $dev['status'] === 'failed');
+    $failed_count = count($failed_dev);
+    
+    $failure_percentage = ($failed_count / $total_dev) * 100;
+    
+    if ($failed_count === 80) {
+        return response()->json([
+            "message" => "Aplikasi berhasil memenuhi ekspektasi",
+            "status" => "success",
+            "testing_percentage" => (100 - $failure_percentage) . "%"
+        ]);
+    }
+    
+    return response()->json([
+        "message" => "Aplikasi gagal memenuhi ekspektasi",
+        "status" => "failed",
+        "failure_percentage" => number_format($failure_percentage, 2) . "%",
+        "problem" => "Terdapat kesalahan dalam beberapa modul aplikasi",
+        "team_issues" => array_values($failed_dev),
+        "suggestion" => "Tingkatkan komunikasi tim dan lakukan code review lebih ketat."
+    ]);
 });
 ?>
