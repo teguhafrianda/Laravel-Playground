@@ -10,9 +10,16 @@ Route::get('/user', function (Request $request) {
 
 const SUCCESS_UNIT_TESTING = 80;
 
-$response = function (): void {};
+$response = function ($value): array {
+    return array(
+        'name' => $value['name'],
+        'stack' => $value['stack'],
+        'skor' => array_sum($value['unit_testing_skor']),
+        'status' => array_sum($value['unit_testing_skor']) >= SUCCESS_UNIT_TESTING ? 'success' : 'failed'
+    );
+};
 
-Route::post('/project/create/cortex', function (Request $request) {
+Route::post('/project/create/cortex', function (Request $request) use ($response) {
 
     /**
      * create request BODY
@@ -20,12 +27,7 @@ Route::post('/project/create/cortex', function (Request $request) {
     $unit_testing = [];
     $request = $request->post();
     foreach ($request as $key => $value) {
-        $value = array(
-            'name' => $value['name'],
-            'stack' => $value['stack'],
-            'skor' => array_sum($value['unit_testing_skor']),
-            'status' => array_sum($value['unit_testing_skor']) >= SUCCESS_UNIT_TESTING ? 'success' : 'failed'
-        );
+        $value = $response($value);
         array_push($unit_testing, $value);
     }
 
