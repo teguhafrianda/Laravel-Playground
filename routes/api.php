@@ -14,7 +14,7 @@ $response = function ($value): array {
     return array(
         'name' => $value['name'],
         'stack' => $value['stack'],
-        'skor' => array_sum($value['unit_testing_skor']),
+        'percentage' => array_sum($value['unit_testing_skor']) . '%',
         'status' => array_sum($value['unit_testing_skor']) >= SUCCESS_UNIT_TESTING ? 'success' : 'failed'
     );
 };
