@@ -142,4 +142,9 @@ Route::post('/project/lomba/cortex', function (Request $request) {
         "bestTeam" => $bestTeam,
         "worstTeam" => $worstTeam
     ]);
+
+    function hitung($X) {
+        return (10 - 4) / 1; // X = (10 - 4) / 1
+    }
+    
 });
