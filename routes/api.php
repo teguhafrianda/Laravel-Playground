@@ -66,34 +66,80 @@ Route::post('/hitung/korupsi', function (Request $request) {
     }
 });
 
-Route::post('/evaluasi/tim', function (Request $request) {
-    $team = $request->input('team');
-    
-    if (!is_array($team) || count($team) === 0) {
-        return response()->json(["error" => "Data tim tidak valid."]);
+Route::post('/compare', function (Request $request) {
+    $participants = $request->all();
+
+    if (!is_array($participants) || empty($participants)) {
+        return response()->json(["error" => "Input tidak valid. Harus berupa array peserta dengan unit testing."], 400);
     }
+
+    $calculateScore = function ($participant) {
+        if (!isset($participant['name']) || !isset($participant['stack']) || !is_array($participant['unit_testing_skor'])) {
+            return ["name" => $participant['name'] ?? "Unknown", "error" => "Data unit testing tidak valid atau tidak lengkap."];
+        }
+
+        $totalPoints = array_sum($participant['unit_testing_skor']);
+        $maxPoints = count($participant['unit_testing_skor']) * 20;
+        $percentage = $maxPoints > 0 ? min(($totalPoints / $maxPoints) * 100, 100) : 0;
+        $status = $totalPoints >= 80 ? "Sukses" : "Gagal";
+
+        return [
+            "name" => $participant['name'],
+            "stack" => $participant['stack'],
+            "totalPoints" => $totalPoints,
+            "percentage" => number_format($percentage, 2) . "%",
+            "status" => $status
+        ];
+    };
+
+    $scores = array_map($calculateScore, $participants);
+    usort($scores, fn($a, $b) => floatval($b['percentage']) <=> floatval($a['percentage']));
     
-    $total_dev = count($team);
-    $failed_dev = array_filter($team, fn($dev) => $dev['status'] === 'failed');
-    $failed_count = count($failed_dev);
-    
-    $failure_percentage = ($failed_count / $total_dev) * 100;
-    
-    if ($failed_count === 80) {
-        return response()->json([
-            "message" => "Aplikasi berhasil memenuhi ekspektasi",
-            "status" => "success",
-            "testing_percentage" => (100 - $failure_percentage) . "%"
-        ]);
-    }
-    
+    $bestParticipant = $scores[0];
+    $worstParticipant = end($scores);
+
     return response()->json([
-        "message" => "Aplikasi gagal memenuhi ekspektasi",
-        "status" => "failed",
-        "failure_percentage" => number_format($failure_percentage, 2) . "%",
-        "problem" => "Terdapat kesalahan dalam beberapa modul aplikasi",
-        "team_issues" => array_values($failed_dev),
-        "suggestion" => "Tingkatkan komunikasi tim dan lakukan code review lebih ketat."
+        "message" => isset($bestParticipant['error']) ? "Tidak dapat menentukan peserta terbaik karena data tidak valid." : "Peserta terbaik berdasarkan hasil unit testing.",
+        "bestParticipant" => $bestParticipant,
+        "worstParticipant" => $worstParticipant
     ]);
 });
-?>
+
+Route::post('/project/lomba/cortex', function (Request $request) {
+    $teams = $request->all();
+
+    if (!is_array($teams) || empty($teams)) {
+        return response()->json(["error" => "Input tidak valid. Harus berupa array tim dengan unit testing."], 400);
+    }
+
+    $calculateScore = function ($team) {
+        if (!isset($team['name']) || !isset($team['stack']) || !is_array($team['unit_testing_skor'])) {
+            return ["name" => $team['name'] ?? "Unknown", "error" => "Data unit testing tidak valid atau tidak lengkap."];
+        }
+
+        $totalPoints = array_sum($team['unit_testing_skor']);
+        $maxPoints = count($team['unit_testing_skor']) * 20;
+        $percentage = $maxPoints > 0 ? min(($totalPoints / $maxPoints) * 100, 100) : 0;
+        $status = $totalPoints >= 80 ? "Sukses" : "Gagal";
+
+        return [
+            "name" => $team['name'],
+            "stack" => $team['stack'],
+            "totalPoints" => $totalPoints,
+            "percentage" => number_format($percentage, 2) . "%",
+            "status" => $status
+        ];
+    };
+
+    $teamScores = array_map($calculateScore, $teams);
+    usort($teamScores, fn($a, $b) => floatval($b['percentage']) <=> floatval($a['percentage']));
+    
+    $bestTeam = $teamScores[0];
+    $worstTeam = end($teamScores);
+
+    return response()->json([
+        "message" => isset($bestTeam['error']) ? "Tidak dapat menentukan tim terbaik karena data tidak valid." : "Tim terbaik berdasarkan hasil unit testing.",
+        "bestTeam" => $bestTeam,
+        "worstTeam" => $worstTeam
+    ]);
+});
