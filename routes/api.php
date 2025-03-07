@@ -1,11 +1,6 @@
 <?php
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
 //functional programming
 
@@ -98,4 +93,35 @@ Route::post('/count/corruption/coretax', function (Request $request) use (
             'balance' => $HandlerFormatRupiah($HandlerBalanceAfterCorruption($pay_tax, $corruption))
         ], 200);
     }
+});
+
+Route::post('/evaluasi/tim', function (Request $request) {
+    $team = $request->input('team');
+    
+    if (!is_array($team) || count($team) === 0) {
+        return response()->json(["error" => "Data tim tidak valid."]);
+    }
+    
+    $total_dev = count($team);
+    $failed_dev = array_filter($team, fn($dev) => $dev['status'] === 'failed');
+    $failed_count = count($failed_dev);
+    
+    $failure_percentage = ($failed_count / $total_dev) * 100;
+    
+    if ($failed_count === 80) {
+        return response()->json([
+            "message" => "Aplikasi berhasil memenuhi ekspektasi",
+            "status" => "success",
+            "testing_percentage" => (100 - $failure_percentage) . "%"
+        ]);
+    }
+    
+    return response()->json([
+        "message" => "Aplikasi gagal memenuhi ekspektasi",
+        "status" => "failed",
+        "failure_percentage" => number_format($failure_percentage, 2) . "%",
+        "problem" => "Terdapat kesalahan dalam beberapa modul aplikasi",
+        "team_issues" => array_values($failed_dev),
+        "suggestion" => "Tingkatkan komunikasi tim dan lakukan code review lebih ketat."
+    ]);
 });
