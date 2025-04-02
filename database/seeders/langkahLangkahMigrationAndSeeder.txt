@@ -1,0 +1,31 @@
+langkah-langkah membuat migration
+1. membuat file migration menggunakan perintah artisan laravel
+2. membuat schema table di method up
+3. mengirim/push file migration yang telah di buat menggunakan perintah artisan
+
+
+migration:
+1. migrate :push/deploy semua schema migration yang sudah dibuat
+2. rollback :hapus/narik semua schema yang sudah push/deploy
+3. refresh :update schema table ketika terjadi perubahan di schema migration
+4. reset :menghapus semua schema table yang sudah di deploy
+
+hint: file migration konsep:
+1. satu file untuk beberapa schema table
+2. satu file untuk satu schema table
+
+migrate spesifik file:
+php artisan migrate --path=database/migrations/0001_01_01_000000_create_users_table.php
+php artisan migrate:refresh --path=database/migrations/0001_01_01_000000_create_users_table.php
+php artisan migrate:rollback --path=database/migrations/0001_01_01_000000_create_users_table.php
+
+how to handle perubahan data yang terjadi di table:
+1. create dump database terus import kembali DB::unprepared()/php artisan
+2. issed
+3. crontab (server)
+
+seed:
+generate file seeder: php artisan make:seeder --namaseedernya (RolesSeeder)
+deploy seeder: php artisan db:seed (seed yang dijalankan berdasarkan dari urutan file seeder yang di call/dijalankan)
+
+notice: seeder sangat berpengaruh pada posisi call nya(pada saat menjalankan seedernya) ketika seedernya mempunyai relasi data antar satu table database
